@@ -19,12 +19,12 @@
 #
 ###############################################################################
 {
-    'name': 'SISP Payment Acquirer',
+    'name': 'SISP Payment Acquirer | Cape-verdean Payment Gateway Integration',
     'category': 'Accounting/Payment Acquirers',
     'sequence': 380,
-    'summary': 'Payment Acquirer: SISP Implementation',
+    'summary': 'Payment Acquirer: SISP Implementation (Cabo Verde)',
     'version': '1.0',
-    'description': """SISP Payment Acquirer""",
+    'description': """SISP Payment Acquirer: The Cape-verdean Payment Gateway Integration""",
     "author": "MARCEL YEKINI",
     'support': 'iekinyfernandes@gmail.com',
     "images": ["static/description/assets/img/main_screenshot.png"],
