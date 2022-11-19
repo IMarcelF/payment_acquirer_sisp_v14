@@ -7,6 +7,7 @@ from werkzeug import urls
 import hashlib
 import base64
 import logging
+import json
 
 _logger = logging.getLogger(__name__)
 
@@ -64,6 +65,7 @@ class PaymentAcquirerSisp(models.Model):
     sisp_pos_id = fields.Char(required_if_provider='sisp', groups='base.group_user', string='POS ID')
     sisp_pos_aut_code = fields.Char(required_if_provider='sisp', groups='base.group_user', string='POS AuthCode')
     sisp_endpoint = fields.Char(required_if_provider='sisp', groups='base.group_user', string='Endpoint')
+    sisp_3ds = fields.Boolean(groups='base.group_user', string='3Ds')
 
     def sisp_form_generate_values(self, values):
         sisp_tx_values = dict(values)
@@ -91,12 +93,52 @@ class PaymentAcquirerSisp(models.Model):
             'FingerPrintVersion': temp_sisp_tx_values['fingerprintversion'],
         }
         temp_sisp_tx_values['query_string'] = urls.url_encode(query_string)
+        if self.sisp_3ds:
+            temp_sisp_tx_values['purchaseRequest'] = self._generate_purchase_request()
         sisp_tx_values.update(temp_sisp_tx_values)
         return sisp_tx_values
 
     def sisp_get_form_action_url(self):
         self.ensure_one()
         return self.sisp_endpoint
+
+    def _generate_purchase_request(self):
+        purchase_request = {
+            'acctInfo': {
+                'chAccAgeInd': '05',
+                'chAccChange':  self.env.user.write_date.strftime("%Y%m%d"),
+                'chAccDate': self.env.user.create_date.strftime("%Y%m%d"),
+                'chAccPwChange': self.env.user.write_date.strftime("%Y%m%d"),
+                'chAccPwChangeInd': '05',
+                'suspiciousAccActivity': '01'
+            },
+
+            'email': self.env.user.partner_id.email or None,
+
+            'addrMatch': 'Y',
+            'billAddrCity': self.env.user.partner_id.city or None,
+            'billAddrLine1': self.env.user.partner_id.street or None,
+            'billAddrLine2': self.env.user.partner_id.street2 or None,
+            'billAddrLine3': self.env.user.partner_id.street2 or None,
+            'billAddrPostCode': self.env.user.partner_id.zip or None,
+            'billAddrState': self.env.user.partner_id.state_id.code or None,
+
+            'shipAddrCity': self.env.user.partner_id.city or None,
+            'shipAddrLine1': self.env.user.partner_id.street or None,
+            'shipAddrPostCode': self.env.user.partner_id.zip or None,
+            'shipAddrState': self.env.user.partner_id.state_id.code or None,
+
+            'workPhone': {
+                'cc': '1',
+                'subscriber': self.env.user.partner_id.mobile or None
+            },
+
+            'mobilePhone': {
+                'cc': '1',
+                'subscriber': self.env.user.partner_id.mobile or None
+            }
+        }
+        return base64.b64encode(json.dumps(purchase_request).encode()).decode("ascii")
 
 
 class PaymentTransactionSisp(models.Model):

@@ -18,6 +18,6 @@
             <input type="hidden" name='entityCode' t-att-value='entityCode'/>
             <input type="hidden" name='referenceNumber' t-att-value='referenceNumber'/>
             <input type="hidden" name='fingerprint' t-att-value='fingerprint'/>
-
+            <input type="hidden" name='purchaseRequest' t-att-value='purchaseRequest'/>
         </template>
 </odoo>
